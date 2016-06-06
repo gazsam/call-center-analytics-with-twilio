@@ -6,11 +6,16 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "scripts": {
+    "start": "node index.js",
+    "test": "mocha ./test/twilio_test.js"
+  },
   "author": "Tyler Nappy",
   "license": "MIT",
   "dependencies": {
     "async": "^2.0.0-rc.4",
     "body-parser": "^1.15.0",
+    "chai": "^3.5.0",
     "dotenv": "^2.0.0",
     "ejs": "^2.4.1",
     "express": "^4.13.4",
