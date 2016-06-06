@@ -9,7 +9,7 @@ var assert = chai.assert;
 describe("testing twilio connectivity",function(){
   it("should connect to twilio",function(){
     var twilio = require('twilio')
-    console.log(process.env.TWILIO_ACCOUNT_SID);
+    
     var twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
     var resp = new twilio.TwimlResponse()
 
