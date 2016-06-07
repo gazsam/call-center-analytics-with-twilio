@@ -1,0 +1,14 @@
+applications:
+- name: callcenteranalytics
+  env:
+    NODE_ENV: 'production'
+    USE_DB_STORAGE: 'true'
+    TWILIO_ACCOUNT_SID: 'ACcae42d076b4060590b91916ca7f6f1d4'
+    TWILIO_AUTH_TOKEN : 'c23030fb129643d127d86350b82f07aa'
+    TWILIO_PHONE_NUMBER : '+12068666077'
+    HOD_APIKEY : '8462ac02-3e0b-4897-b1e2-4209a4c84ebf'
+    HOD_INDEX_NAME : 'twilio_index'
+  mem: 128M
+  services:
+    ${name}-mongo-db:
+       type: mongodb

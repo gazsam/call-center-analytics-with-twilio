@@ -19,7 +19,7 @@ var urlencoded = bodyParser.urlencoded({extended: false})
 var mongoose = require('mongoose')
 var async = require('async')
 // BUGFIX: send alert to client when we have obtained a recording
-//var socket = require('socket.io')(http);
+var socket = require('socket.io')(http);
 
 
 app.use(urlencoded)
@@ -231,7 +231,7 @@ function obtainAudio(CallSid) {
                 console.log("Audio file obtained for: " + CallSid)
 
                 // BUGFIX: send alert to client when we have obtained a recording
-                // socket.emit('onComplete',{action:"audioObtained"});
+                socket.emit('onComplete',{action:"audioObtained"});
               })
             })
           } else {
@@ -359,7 +359,7 @@ app.get('/processCall', function(req, res) {
                                   indexReference: indexReference
                                 }, function(err, numberAffected, rawResponse) {
                                   // BUGFIX: send alert to client when we have obtained a recording
-                                  //socket.emit('onComplete',{action:"callProcessed"});
+                                  socket.emit('onComplete',{action:"callProcessed"});
                                   console.log("Processed")
                                 })
                                 //
