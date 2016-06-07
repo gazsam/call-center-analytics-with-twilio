@@ -3,7 +3,9 @@ var path = require('path')
 
 if (env == 'dev') {
   require('dotenv').load()
-  var twiMLUrl = "http://26e51564.ngrok.io/twilioVoice"
+  //TODO: change this when running ngrok
+  var twiMLUrl = "http://77a199c4.ngrok.io/twilioVoice"
+
 } else {
   // var twiMLUrl = path.join(__dirname, 'twilioVoice')
   var twiMLUrl = "https://callcenteranalytics.stacka.to/twilioVoice"
@@ -20,7 +22,7 @@ var mongoose = require('mongoose')
 var async = require('async')
 // BUGFIX: send alert to client when we have obtained a recording
 var socket = require('socket.io')(http);
-
+var havenondemand = require('havenondemand')
 
 app.use(urlencoded)
 app.use(express.static(path.join(__dirname, 'public')))
@@ -56,33 +58,99 @@ var uristring = null;
 //  }]
 // }
 
-if(process.env.VCAP_SERVICES == null) {
-   uristring = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || process.env.MONGO_LOCAL_URL || 'mongodb://localhost/test'
-} else {
-  console.log(process.env.VCAP_SERVICES);
-  var services = JSON.parse(process.env.VCAP_SERVICES);
-  if (services) {
-   if (services["mongodb"]) {
-     services["mongodb"].forEach(function (entry) {
-         if (entry.name === (process.env.STACKATO_APP_NAME + "-mongo-db")) {
-           uristring = entry.credentials.uri
+// {
+//   "hod-demo": [
+//     {
+//       "credentials": {
+//         "HOD_API_KEY": "285e54b2-b31a-4181-a9d9-6c09fcd37212"
+//       },
+//       "syslog_drain_url": null,
+//       "label": "hod-demo",
+//       "provider": null,
+//       "plan": "default",
+//       "name": "callcenteranalytics-HOD",
+//       "tags": [
+//         "hod-demo"
+//       ]
+//     }
+//   ],
+//   "mongo-dev": [
+//     {
+//       "credentials": {
+//         "db": "df70fd699faf14848b6eaaa59da70345d",
+//         "host": "mongo.my-mongo.svc.cluster.ucp",
+//         "hostname": "mongo.my-mongo.svc.cluster.ucp",
+//         "name": "df70fd699faf14848b6eaaa59da70345d",
+//         "password": "MFbsY08TbmSmj5cTYPKSXENk2a2EHpRndihXwa1yp5c",
+//         "port": "27017",
+//         "uri": "mongodb://32668d69e5ba974d:MFbsY08TbmSmj5cTYPKSXENk2a2EHpRndihXwa1yp5c@mongo.my-mongo.svc.cluster.ucp:27017/df70fd699faf14848b6eaaa59da70345d;",
+//         "username": "32668d69e5ba974d"
+//       },
+//       "syslog_drain_url": null,
+//       "label": "mongo-dev",
+//       "provider": null,
+//       "plan": "default",
+//       "name": "mongo-demo",
+//       "tags": [
+//         "mongo-dev"
+//       ]
+//     }
+//   ]
+// }
 
-         }
-     });
-   }
+var uriString = null;
+if(process.env.VCAP_SERVICES == null) {
+   uriString = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || process.env.MONGO_LOCAL_URL || 'mongodb://localhost/test'
+} else {
+  console.log("VCAP_SERVICES="+ process.env.VCAP_SERVICES);
+  var services = JSON.parse(process.env.VCAP_SERVICES);
+
+
+  if (services) {
+    var isStackato = process.env.IS_STACKATO || false;
+    var mongoServiceName = process.env.MONGO_SERVICE_NAME || "mongo-dev";
+
+    if(isStackato == true) {
+      if (services[mongoServiceName]) {
+       services[mongoServiceName].forEach(function (entry) {
+           if (entry.name === (process.env.STACKATO_APP_NAME + "-"+mongoServiceName)) {
+             uriString = entry.credentials.uri;
+           }
+       });
+      }
+    } else {
+
+
+      if (services[mongoServiceName]) {
+        uriString = services[mongoServiceName][0].credentials.uri;
+        console.log("mongo URI = " + uriString);
+      } else {
+        console.log("no expected services block of "+mongoServiceName+ " found");
+      }
+
+      var hodServiceName = process.env.HODSERVICESNAME || "hod-demo";
+      var hodClient = null;
+
+      if(services[hodServiceName]) {
+        hodApiKey = services[hodServiceName][0].credentials.HOD_API_KEY;
+        console.log("Haven OnDemand API key = "+hodApiKey);
+        hodClient = new havenondemand.HODClient(hodApiKey);
+
+      } else {
+         hodClient = new havenondemand.HODClient(process.env.HOD_APIKEY);
+      }
+    }
+
   }
 }
 
 
 
-var havenondemand = require('havenondemand')
-var hodClient = new havenondemand.HODClient(process.env.HOD_APIKEY)
-
 var twilioClient = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
 
 var languageObj ={'en-US-tel': {'regular': 'US English', 'sentiment-analysis': 'eng'}, 'en-GB-tel': {'regular': 'British English', 'sentiment-analysis': 'eng'}, 'es-ES-tel': {'regular': 'European Spanish', 'sentiment-analysis': 'spa'}, 'fr-FR-tel': {'regular': 'French', 'sentiment-analysis': 'fre'}}
 
-mongoose.connect(uristring, function (err, res) {
+mongoose.connect(uriString, function (err, res) {
   if (err) {
   console.log ('ERROR connecting to: ' + uristring + '. ' + err);
   } else {
