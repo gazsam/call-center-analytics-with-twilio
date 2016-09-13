@@ -1,5 +1,5 @@
 applications:
-- name: callcenteranalytics
+- name: TESTTWILIO
   env:
     NODE_ENV: 'production'
     USE_DB_STORAGE: 'true'
