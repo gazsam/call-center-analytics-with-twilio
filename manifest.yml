@@ -11,6 +11,5 @@ applications:
     MONGO_SERVICE_NAME : 'mongo-dev'
     HODSERVICESNAME : 'hod-demo'
   memory: 128M
-  services:
-   - TESTTWILIO-mongo-db
+
 
